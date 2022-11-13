@@ -18,8 +18,38 @@ async def on_ready():
 sq_queue = []
 
 class InputData:
-    def __init__(self, str_index: int, userid: int):
-        pass
+    cnt = 3
+    sbj = ""
+    vrb = ""
+    obj = ""
+    cmpl = ""
+
+    str_index = -1
+
+    def __init__(self, str_index: int):
+        self.str_index = str_index
+
+    @property
+    def count(self):
+        return self.cnt
+
+    def __str__(self):
+        return f"{self.cnt}, {self.sbj}, {self.vrb}, {self.obj}, {self.cmpl}"
+
+    def save(self, save_data):
+        if self.cnt == 3:
+            self.sbj = save_data
+        elif self.cnt == 2:
+            self.vrb = save_data
+        elif self.cnt == 1:
+            self.obj = save_data
+        else:
+            self.cmpl = save_data
+        self.cnt -= 1
+        return self.cnt + 1
+    
+    def to_list(self):
+        return [self.str_index, self.sbj, self.vrb, self.obj, self.cmpl]
 
 @client.event
 async def on_message(message):
@@ -31,28 +61,22 @@ async def on_message(message):
         msg_str = msg_str[1 : : ]
         contents = msg_str.split(' ')
         
-        if contents[0] == "sq":
+        if contents[0] == "sq" and not message.author.id in [x[0] for x in sq_queue]:
             await message.channel.send('Find S')
-            sq_queue.append([None, message.author.id, 3]) # NoneÀÚ¸®¿¡ µé¾î°¥ index(csv)ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
-            await message.channel.send(sq_queue)
+            sq_queue.append([message.author.id, InputData(-1)]) # index(csv)
     else:
         for i in range(len(sq_queue)):
             element = sq_queue[i]
-            if element[1] == message.author.id:
-                if element[2] == 3:
-                    await message.channel.send('Find V')
-                    element[2] -= 1
-                    await message.channel.send(sq_queue)
-                elif element[2] == 2:
-                    await message.channel.send('Find O')
-                    element[2] -= 1
-                    await message.channel.send(sq_queue)
-                elif element[2] == 1:
-                    await message.channel.send('Find C')
-                    element[2] -= 1
-                    await message.channel.send(sq_queue)
-                else:
+            if element[0] == message.author.id:
+                save_key = element[1].save(message.content)
+                if save_key == 3:
+                    await message.channel.send("Find V")
+                elif save_key == 2:
+                    await message.channel.send("Find O")
+                elif save_key == 1:
+                    await message.channel.send("Find C")
+                elif save_key == 0:
+                    await message.channel.send("Thank you for your cooperation!")
                     sq_queue.pop(i)
-                    await message.channel.send('Thank you for your cooperation!')
 
 client.run('MTAzNzAzNTc4MzYzNjM4NTgwMg.GcLJgi.K_WPyOSZyHI5iHlbvWI0E2zgGvLd7bbJRa4T9E')
