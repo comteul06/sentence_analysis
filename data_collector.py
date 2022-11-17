@@ -1,4 +1,5 @@
 import discord
+import data_writer as dw
 
 #region Startup
 
@@ -17,40 +18,6 @@ async def on_ready():
 
 sq_queue = []
 
-class InputData:
-    cnt = 3
-    sbj = ""
-    vrb = ""
-    obj = ""
-    cmpl = ""
-
-    str_index = -1
-
-    def __init__(self, str_index: int):
-        self.str_index = str_index
-
-    @property
-    def count(self):
-        return self.cnt
-
-    def __str__(self):
-        return f"{self.cnt}, {self.sbj}, {self.vrb}, {self.obj}, {self.cmpl}"
-
-    def save(self, save_data):
-        if self.cnt == 3:
-            self.sbj = save_data
-        elif self.cnt == 2:
-            self.vrb = save_data
-        elif self.cnt == 1:
-            self.obj = save_data
-        else:
-            self.cmpl = save_data
-        self.cnt -= 1
-        return self.cnt + 1
-    
-    def to_list(self):
-        return [self.str_index, self.sbj, self.vrb, self.obj, self.cmpl]
-
 @client.event
 async def on_message(message):
     if message.author == client.user:
@@ -62,8 +29,8 @@ async def on_message(message):
         contents = msg_str.split(' ')
         
         if contents[0] == "sq" and not message.author.id in [x[0] for x in sq_queue]:
-            await message.channel.send('Find S')
-            sq_queue.append([message.author.id, InputData(-1)]) # index(csv)
+            sq_queue.append([message.author.id, dw.get_snt_empty()]) # index(csv)
+            await message.channel.send(f'{sq_queue[len(sq_queue) - 1][1].sentence}\n(Input -1 if none)\nFind S')
     else:
         for i in range(len(sq_queue)):
             element = sq_queue[i]
